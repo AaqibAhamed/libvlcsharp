@@ -40,15 +40,16 @@ namespace LibVLCSharp.Shared
 
             [DllImport(Constants.Kernel32, SetLastError = true)]
             internal static extern ErrorModes SetErrorMode(ErrorModes uMode);
-
+#elif ANDROID
+            [DllImport(Constants.LibraryName, EntryPoint = "JNI_OnLoad")]
+            internal static extern int JniOnLoad(IntPtr javaVm, IntPtr reserved = default);
+#endif
+#if UNITY
             [DllImport(Constants.UnityPlugin)]
             internal static extern void SetPluginPath(string path);
             
             [DllImport(Constants.UnityPlugin)]
             internal static extern void Print(string toPrint);
-#elif ANDROID
-            [DllImport(Constants.LibraryName, EntryPoint = "JNI_OnLoad")]
-            internal static extern int JniOnLoad(IntPtr javaVm, IntPtr reserved = default);
 #endif
             [DllImport(Constants.LibraryName, CallingConvention = CallingConvention.Cdecl,
                 EntryPoint = "libvlc_get_version")]
@@ -80,7 +81,7 @@ namespace LibVLCSharp.Shared
             InitializeAndroid();
 #elif UWP
             InitializeUWP();
-#elif NETFRAMEWORK || NETSTANDARD
+#elif (NETFRAMEWORK || NETSTANDARD) && !UNITY_ANDROID
             DisableMessageErrorBox();
             InitializeDesktop(libvlcDirectoryPath);
 #endif
