@@ -13,12 +13,19 @@ namespace LibVLCSharp.Shared
     {
         readonly struct Native
         {
+#if UNITY
+            [DllImport(Constants.UnityPlugin, CallingConvention = CallingConvention.Cdecl,
+                EntryPoint = "libvlc_unity_media_player_new")]
+            internal static extern IntPtr LibVLCMediaPlayerNew(IntPtr libvlc);
 
+            [DllImport(Constants.UnityPlugin, CallingConvention = CallingConvention.Cdecl,
+                EntryPoint = "libvlc_unity_get_texture")]
+            internal static extern IntPtr GetTexture(IntPtr mediaPlayer, out bool updated);
+#else
             [DllImport(Constants.LibraryName, CallingConvention = CallingConvention.Cdecl,
                 EntryPoint = "libvlc_media_player_new")]
             internal static extern IntPtr LibVLCMediaPlayerNew(IntPtr libvlc);
-
-
+#endif
             [DllImport(Constants.LibraryName, CallingConvention = CallingConvention.Cdecl,
                 EntryPoint = "libvlc_media_player_release")]
             internal static extern void LibVLCMediaPlayerRelease(IntPtr mediaPlayer);
@@ -592,18 +599,9 @@ namespace LibVLCSharp.Shared
                 EntryPoint = "libvlc_media_player_retain")]
             internal static extern void LibVLCMediaPlayerRetain(IntPtr mediaplayer);
 #if ANDROID
-
             [DllImport(Constants.LibraryName, CallingConvention = CallingConvention.Cdecl,
                 EntryPoint = "libvlc_media_player_set_android_context")]
             internal static extern void LibVLCMediaPlayerSetAndroidContext(IntPtr mediaPlayer, IntPtr aWindow);
-#endif
-
-#if UNITY
-            [DllImport(Constants.UnityPlugin)]
-            internal static extern IntPtr CreateAndInitMediaPlayer(IntPtr libvlc);
-
-            [DllImport(Constants.UnityPlugin, EntryPoint = "getTexture")]
-            internal static extern IntPtr GetTexture(IntPtr mediaPlayer, out bool updated);
 #endif
         }
 
@@ -621,13 +619,7 @@ namespace LibVLCSharp.Shared
         /// </param>
         /// <returns>a new media player object, or NULL on error.</returns>
         public MediaPlayer(LibVLC libVLC)
-            : base(() =>
-#if UNITY
-            Native.CreateAndInitMediaPlayer(libVLC.NativeReference),
-#else
-            Native.LibVLCMediaPlayerNew(libVLC.NativeReference),
-#endif
-            Native.LibVLCMediaPlayerRelease)
+            : base(() => Native.LibVLCMediaPlayerNew(libVLC.NativeReference), Native.LibVLCMediaPlayerRelease)
         {
             _gcHandle = GCHandle.Alloc(this);
         }
